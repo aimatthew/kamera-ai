@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+.idea/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+app/build/
+app/src/main/assets/*.tflite
+!app/src/main/assets/README.md
+*.pt
+/yolo11n.onnx
+__pycache__/

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kamera AI</string>
+    <string name="status_loading">Przygotowuję analizę obrazu</string>
+    <string name="objects_in_frame">OBIEKTY W KADRZE</string>
+    <string name="no_objects">Brak rozpoznanych obiektów</string>
+    <string name="permission_eyebrow">KAMERA AI</string>
+    <string name="camera_permission_title">Zobacz, co jest przed Tobą</string>
+    <string name="camera_permission_required">Dostęp do aparatu jest potrzebny wyłącznie do analizy obrazu na żywo. Obraz pozostaje na urządzeniu.</string>
+    <string name="grant_permission">Włącz aparat</string>
+    <string name="loading_model">&#321;adowanie modelu YOLO&#8230;</string>
+    <string name="model_missing">Brak modelu YOLO w zasobach aplikacji.</string>
+    <string name="open_menu">Otwórz menu</string>
+    <string name="close_menu">Zamknij menu</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_subtitle">Kamera AI</string>
+    <string name="updates_title">AKTUALIZACJE</string>
+    <string name="current_version">Zainstalowana wersja: %1$s</string>
+    <string name="update_ready">Sprawdź, czy w GitHub Releases jest dostępna nowsza wersja aplikacji.</string>
+    <string name="check_for_updates">Sprawdź aktualizacje</string>
+    <string name="check_again">Sprawdź ponownie</string>
+    <string name="checking_update">Sprawdzam najnowszą wersję…</string>
+    <string name="downloading_update">Pobieranie aktualizacji: %1$d%%</string>
+    <string name="download_and_install">Pobierz i zainstaluj</string>
+    <string name="latest_version">Masz najnowszą wersję aplikacji.</string>
+    <string name="new_version_available">Dostępna jest wersja %1$s.</string>
+    <string name="opening_installer">Aktualizacja pobrana. Otwieram instalator…</string>
+    <string name="install_permission_needed">Zezwól aplikacji na instalowanie aktualizacji, a następnie wróć do Kamera AI.</string>
+    <string name="open_github">Otwórz repozytorium GitHub</string>
+    <string name="github_repository_missing">Ustaw repozytorium w polu „github_repository” w strings.xml.</string>
+    <string name="update_security_note">Android poprosi o potwierdzenie instalacji. Aktualizacja musi być podpisana tym samym kluczem co obecna aplikacja.</string>
+    <string name="github_repository" translatable="false">aimatthew/kamera-ai</string>
+</resources>

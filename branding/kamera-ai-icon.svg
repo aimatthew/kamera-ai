@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" role="img" aria-labelledby="title desc">
+  <title id="title">Ikona Kamera AI</title>
+  <desc id="desc">Obiektyw aparatu otoczony narożnikami pola detekcji.</desc>
+  <rect width="108" height="108" rx="24" fill="#12161B"/>
+  <g fill="none" stroke="#4DA6A8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M35 22h-8a5 5 0 0 0-5 5v8"/>
+    <path d="M73 22h8a5 5 0 0 1 5 5v8"/>
+    <path d="M22 73v8a5 5 0 0 0 5 5h8"/>
+    <path d="M86 73v8a5 5 0 0 1-5 5h-8"/>
+  </g>
+  <circle cx="54" cy="54" r="23" fill="none" stroke="#5B8CFF" stroke-width="5"/>
+  <path d="M45 37l11-3 7 11-6 5-13-2z" fill="#5B8CFF"/>
+  <path d="M59 35l10 7-1 13-8 2-6-12z" fill="#4DA6A8"/>
+  <path d="M70 46l3 11-7 11-8-3 2-12z" fill="#5B8CFF"/>
+  <path d="M66 70l-11 4-10-7 2-8 13 1z" fill="#4DA6A8"/>
+  <path d="M51 74l-11-7-1-13 8-3 7 12z" fill="#5B8CFF"/>
+  <path d="M38 63l-3-12 7-11 8 3-2 12z" fill="#4DA6A8"/>
+  <circle cx="54" cy="54" r="4" fill="#F8FAFC"/>
+</svg>

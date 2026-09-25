@@ -4,13 +4,16 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import ai.onnxruntime.TensorInfo
+import ai.onnxruntime.providers.NNAPIFlags
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import android.os.Build
 import java.nio.FloatBuffer
+import java.util.EnumSet
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -24,22 +27,16 @@ class OnnxYoloDetector(
     private val labels = CocoLabels.PL
     private val environment = OrtEnvironment.getEnvironment()
     private val session: OrtSession
+    val backendName: String
     private val inputName: String
     private val inputWidth: Int
     private val inputHeight: Int
 
     init {
         val modelBytes = context.assets.open(MODEL_FILE).use { it.readBytes() }
-        val options = OrtSession.SessionOptions().apply {
-            setIntraOpNumThreads(max(2, Runtime.getRuntime().availableProcessors() / 2))
-            setInterOpNumThreads(1)
-            setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
-        }
-        session = try {
-            environment.createSession(modelBytes, options)
-        } finally {
-            options.close()
-        }
+        val sessionSetup = createSession(modelBytes)
+        session = sessionSetup.session
+        backendName = sessionSetup.backendName
 
         inputName = session.inputNames.first()
         val tensorInfo = session.inputInfo.getValue(inputName).info as TensorInfo
@@ -50,6 +47,48 @@ class OnnxYoloDetector(
         inputHeight = shape[2].toInt()
         inputWidth = shape[3].toInt()
     }
+
+    private fun createSession(modelBytes: ByteArray): SessionSetup {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            val nnapiOptions = createSessionOptions(cpuThreads = 2)
+            try {
+                nnapiOptions.addNnapi(
+                    EnumSet.of(
+                        NNAPIFlags.CPU_DISABLED,
+                        NNAPIFlags.USE_FP16
+                    )
+                )
+                return SessionSetup(
+                    session = environment.createSession(modelBytes, nnapiOptions),
+                    backendName = "NNAPI"
+                )
+            } catch (_: Exception) {
+                // Nie każdy sterownik NNAPI obsługuje wszystkie operacje modelu YOLO.
+                // W takim przypadku aplikacja nadal uruchomi się na sprawdzonym backendzie CPU.
+            } finally {
+                nnapiOptions.close()
+            }
+        }
+
+        val cpuOptions = createSessionOptions(
+            cpuThreads = max(2, Runtime.getRuntime().availableProcessors() / 2)
+        )
+        return try {
+            SessionSetup(
+                session = environment.createSession(modelBytes, cpuOptions),
+                backendName = "CPU"
+            )
+        } finally {
+            cpuOptions.close()
+        }
+    }
+
+    private fun createSessionOptions(cpuThreads: Int) =
+        OrtSession.SessionOptions().apply {
+            setIntraOpNumThreads(cpuThreads)
+            setInterOpNumThreads(1)
+            setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+        }
 
     fun detect(source: Bitmap): YoloResult {
         val prepared = letterbox(source)
@@ -241,6 +280,11 @@ class OnnxYoloDetector(
         val scale: Float,
         val padX: Float,
         val padY: Float
+    )
+
+    private data class SessionSetup(
+        val session: OrtSession,
+        val backendName: String
     )
 
     companion object {

@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Size
 import android.view.Window
 import android.view.WindowManager
 import android.view.View
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
     private val isAnalyzing = AtomicBoolean(false)
     private var detector: OnnxYoloDetector? = null
     private var inferenceErrorShown = false
+    private var lastAnalysisStartedNs = 0L
 
     private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -109,9 +111,13 @@ class MainActivity : AppCompatActivity() {
         setStatus(getString(R.string.status_loading), R.color.accent)
         analysisExecutor.execute {
             try {
-                detector = OnnxYoloDetector(applicationContext)
+                val loadedDetector = OnnxYoloDetector(applicationContext)
+                detector = loadedDetector
                 runOnUiThread {
-                    setStatus("YOLO11s  •  gotowy", R.color.success)
+                    setStatus(
+                        "YOLO11s  •  ${loadedDetector.backendName}  •  gotowy",
+                        R.color.success
+                    )
                 }
             } catch (error: Exception) {
                 runOnUiThread {
@@ -146,6 +152,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             val analysis = ImageAnalysis.Builder()
+                .setTargetResolution(Size(640, 480))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                 .build()
@@ -169,10 +176,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun analyzeFrame(image: ImageProxy) {
         val currentDetector = detector
-        if (currentDetector == null || !isAnalyzing.compareAndSet(false, true)) {
+        val nowNs = System.nanoTime()
+        val analysisTooSoon = nowNs - lastAnalysisStartedNs < ANALYSIS_INTERVAL_NS
+        if (
+            currentDetector == null ||
+            analysisTooSoon ||
+            !isAnalyzing.compareAndSet(false, true)
+        ) {
             image.close()
             return
         }
+        lastAnalysisStartedNs = nowNs
 
         var uprightBitmap: Bitmap? = null
         try {
@@ -185,7 +199,8 @@ class MainActivity : AppCompatActivity() {
                 overlay.setResult(result)
                 updateDetectionStatusVisibility(result.detections.isNotEmpty())
                 setStatus(
-                    "YOLO11s  •  ${result.inferenceMs} ms  •  ${result.detections.size}",
+                    "YOLO11s  •  ${currentDetector.backendName}  •  " +
+                        "${result.inferenceMs} ms  •  ${result.detections.size}",
                     R.color.success
                 )
                 resultText.text = summarize(result.detections)
@@ -537,6 +552,7 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         const val PREFERENCES_NAME = "kamera_ai_preferences"
         const val PREFERENCE_DISPLAY_MODE = "detection_display_mode"
+        const val ANALYSIS_INTERVAL_NS = 100_000_000L
     }
 }
 

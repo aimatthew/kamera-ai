@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 160" role="img" aria-labelledby="title desc">
+  <title id="title">Kamera AI</title>
+  <desc id="desc">Logo aplikacji Kamera AI.</desc>
+  <g transform="translate(16 16)">
+    <g fill="none" stroke="#4DA6A8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M38 8H24A16 16 0 0 0 8 24v14"/>
+      <path d="M90 8h14a16 16 0 0 1 16 16v14"/>
+      <path d="M8 90v14a16 16 0 0 0 16 16h14"/>
+      <path d="M120 90v14a16 16 0 0 1-16 16H90"/>
+    </g>
+    <circle cx="64" cy="64" r="39" fill="none" stroke="#5B8CFF" stroke-width="7"/>
+    <path d="M49 35l18-5 12 18-10 8-22-3z" fill="#5B8CFF"/>
+    <path d="M72 32l17 11-2 22-13 3-10-20z" fill="#4DA6A8"/>
+    <path d="M91 50l5 19-12 18-13-5 3-20z" fill="#5B8CFF"/>
+    <path d="M85 91l-19 6-17-12 4-13 21 2z" fill="#4DA6A8"/>
+    <path d="M60 97L42 85l-2-21 13-5 12 20z" fill="#5B8CFF"/>
+    <path d="M39 79l-5-20 12-18 13 5-3 20z" fill="#4DA6A8"/>
+    <circle cx="64" cy="64" r="6" fill="#F8FAFC"/>
+  </g>
+  <text x="174" y="101" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="68" font-weight="750" letter-spacing="-2">Kamera</text>
+  <text x="458" y="101" fill="#5B8CFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="68" font-weight="800" letter-spacing="-2">AI</text>
+</svg>

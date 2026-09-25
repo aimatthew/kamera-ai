@@ -34,5 +34,5 @@
     <string name="open_github">Otwórz repozytorium GitHub</string>
     <string name="github_repository_missing">Ustaw repozytorium w polu „github_repository” w strings.xml.</string>
     <string name="update_security_note">Android poprosi o potwierdzenie instalacji. Aktualizacja musi być podpisana tym samym kluczem co obecna aplikacja.</string>
-    <string name="github_repository" translatable="false">aimatthew/kamera-ai</string>
+    <string name="github_repository" translatable="false">aimatthew/kamera-ai-updates</string>
 </resources>

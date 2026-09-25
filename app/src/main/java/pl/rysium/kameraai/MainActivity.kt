@@ -11,6 +11,7 @@ import android.graphics.Matrix
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Size
 import android.view.Window
@@ -50,14 +51,15 @@ class MainActivity : AppCompatActivity() {
     private var updateDialog: Dialog? = null
     private var updateStatusText: TextView? = null
     private var pendingUpdateApk: File? = null
-    private var statusHiddenForDetections = false
     private var detectionDisplayMode = DetectionDisplayMode.AUTOMATIC
 
     private val analysisExecutor = Executors.newSingleThreadExecutor()
     private val isAnalyzing = AtomicBoolean(false)
     private var detector: OnnxYoloDetector? = null
     private var inferenceErrorShown = false
-    private var lastAnalysisStartedNs = 0L
+    private var lastAnalysisCompletedNs = 0L
+    private var lastPerformanceStatusUpdateMs = 0L
+    private var lastDetectionSummary = ""
 
     private val cameraPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -115,7 +117,7 @@ class MainActivity : AppCompatActivity() {
                 detector = loadedDetector
                 runOnUiThread {
                     setStatus(
-                        "YOLO11s  •  ${loadedDetector.backendName}  •  gotowy",
+                        "YOLO26s/320  •  ${loadedDetector.backendName}  •  gotowy",
                         R.color.success
                     )
                 }
@@ -177,7 +179,8 @@ class MainActivity : AppCompatActivity() {
     private fun analyzeFrame(image: ImageProxy) {
         val currentDetector = detector
         val nowNs = System.nanoTime()
-        val analysisTooSoon = nowNs - lastAnalysisStartedNs < ANALYSIS_INTERVAL_NS
+        val analysisTooSoon =
+            nowNs - lastAnalysisCompletedNs < ANALYSIS_COOLDOWN_NS
         if (
             currentDetector == null ||
             analysisTooSoon ||
@@ -186,7 +189,6 @@ class MainActivity : AppCompatActivity() {
             image.close()
             return
         }
-        lastAnalysisStartedNs = nowNs
 
         var uprightBitmap: Bitmap? = null
         try {
@@ -197,13 +199,22 @@ class MainActivity : AppCompatActivity() {
             val result = currentDetector.detect(uprightBitmap)
             runOnUiThread {
                 overlay.setResult(result)
-                updateDetectionStatusVisibility(result.detections.isNotEmpty())
-                setStatus(
-                    "YOLO11s  •  ${currentDetector.backendName}  •  " +
-                        "${result.inferenceMs} ms  •  ${result.detections.size}",
-                    R.color.success
-                )
-                resultText.text = summarize(result.detections)
+
+                val summary = summarize(result.detections)
+                if (summary != lastDetectionSummary) {
+                    lastDetectionSummary = summary
+                    resultText.text = summary
+                }
+
+                val nowMs = SystemClock.elapsedRealtime()
+                if (nowMs - lastPerformanceStatusUpdateMs >= STATUS_UPDATE_INTERVAL_MS) {
+                    lastPerformanceStatusUpdateMs = nowMs
+                    setStatus(
+                        "YOLO26s/320  •  ${currentDetector.backendName}  •  " +
+                            "${result.inferenceMs} ms  •  ${result.detections.size}",
+                        R.color.success
+                    )
+                }
             }
         } catch (error: Exception) {
             if (!inferenceErrorShown) {
@@ -218,6 +229,7 @@ class MainActivity : AppCompatActivity() {
             uprightBitmap?.recycle()
             image.close()
             isAnalyzing.set(false)
+            lastAnalysisCompletedNs = System.nanoTime()
         }
     }
 
@@ -286,31 +298,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun updateDetectionStatusVisibility(hasDetections: Boolean) {
-        if (statusHiddenForDetections == hasDetections) return
-        statusHiddenForDetections = hasDetections
-        statusPanel.animate().cancel()
-
-        if (hasDetections) {
-            statusPanel.animate()
-                .alpha(0f)
-                .setDuration(160L)
-                .withEndAction {
-                    if (statusHiddenForDetections) statusPanel.visibility = View.GONE
-                }
-                .start()
-        } else {
-            statusPanel.alpha = 0f
-            statusPanel.visibility = View.VISIBLE
-            statusPanel.animate()
-                .alpha(1f)
-                .setDuration(180L)
-                .start()
-        }
-    }
-
     private fun showStatusPanelImmediately() {
-        statusHiddenForDetections = false
         statusPanel.animate().cancel()
         statusPanel.alpha = 1f
         statusPanel.visibility = View.VISIBLE
@@ -552,7 +540,8 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         const val PREFERENCES_NAME = "kamera_ai_preferences"
         const val PREFERENCE_DISPLAY_MODE = "detection_display_mode"
-        const val ANALYSIS_INTERVAL_NS = 100_000_000L
+        const val ANALYSIS_COOLDOWN_NS = 100_000_000L
+        const val STATUS_UPDATE_INTERVAL_MS = 1_000L
     }
 }
 

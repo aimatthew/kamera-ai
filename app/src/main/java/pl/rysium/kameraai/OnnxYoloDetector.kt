@@ -12,6 +12,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Build
+import android.util.Log
 import java.nio.FloatBuffer
 import java.util.EnumSet
 import kotlin.math.abs
@@ -54,7 +55,6 @@ class OnnxYoloDetector(
             try {
                 nnapiOptions.addNnapi(
                     EnumSet.of(
-                        NNAPIFlags.CPU_DISABLED,
                         NNAPIFlags.USE_FP16
                     )
                 )
@@ -62,7 +62,8 @@ class OnnxYoloDetector(
                     session = environment.createSession(modelBytes, nnapiOptions),
                     backendName = "NNAPI"
                 )
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                Log.w(TAG, "NNAPI niedostępne; używam CPU", error)
                 // Nie każdy sterownik NNAPI obsługuje wszystkie operacje modelu YOLO.
                 // W takim przypadku aplikacja nadal uruchomi się na sprawdzonym backendzie CPU.
             } finally {
@@ -70,9 +71,7 @@ class OnnxYoloDetector(
             }
         }
 
-        val cpuOptions = createSessionOptions(
-            cpuThreads = max(2, Runtime.getRuntime().availableProcessors() / 2)
-        )
+        val cpuOptions = createSessionOptions(cpuThreads = 2)
         return try {
             SessionSetup(
                 session = environment.createSession(modelBytes, cpuOptions),
@@ -288,7 +287,8 @@ class OnnxYoloDetector(
     )
 
     companion object {
-        const val MODEL_FILE = "yolo11s.onnx"
+        private const val TAG = "OnnxYoloDetector"
+        const val MODEL_FILE = "yolo26s.onnx"
         private const val MAX_RESULTS = 100
     }
 }

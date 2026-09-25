@@ -6,19 +6,21 @@ from ultralytics import YOLO
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "app" / "src" / "main" / "assets"
-DESTINATION = ASSETS / "yolo11s.onnx"
+DESTINATION = ASSETS / "yolo26s.onnx"
 
 
 def main() -> None:
     ASSETS.mkdir(parents=True, exist_ok=True)
-    model = YOLO("yolo11s.pt")
+    model = YOLO("yolo26s.pt")
     exported = Path(
         model.export(
             format="onnx",
-            imgsz=640,
+            imgsz=320,
             dynamic=False,
             simplify=True,
-            nms=False,
+            # Surowe wyjście one-to-many jest najbardziej zgodne z NNAPI
+            # i zachowuje format obsługiwany przez dekoder aplikacji.
+            nms=None,
             opset=17,
         )
     )

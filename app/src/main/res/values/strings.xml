@@ -14,6 +14,11 @@
     <string name="close_menu">Zamknij menu</string>
     <string name="menu_title">Menu</string>
     <string name="menu_subtitle">Kamera AI</string>
+    <string name="detection_display_title">WYŚWIETLANIE DETEKCJI</string>
+    <string name="detection_display_description">Dostosuj ilość informacji widocznych na podglądzie aparatu.</string>
+    <string name="display_mode_minimal">Minimalny</string>
+    <string name="display_mode_automatic">Auto</string>
+    <string name="display_mode_full">Pełny</string>
     <string name="updates_title">AKTUALIZACJE</string>
     <string name="current_version">Zainstalowana wersja: %1$s</string>
     <string name="update_ready">Sprawdź, czy w GitHub Releases jest dostępna nowsza wersja aplikacji.</string>

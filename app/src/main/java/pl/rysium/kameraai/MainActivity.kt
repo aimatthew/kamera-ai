@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
     private var updateDialog: Dialog? = null
     private var updateStatusText: TextView? = null
     private var pendingUpdateApk: File? = null
+    private var statusHiddenForDetections = false
+    private var detectionDisplayMode = DetectionDisplayMode.AUTOMATIC
 
     private val analysisExecutor = Executors.newSingleThreadExecutor()
     private val isAnalyzing = AtomicBoolean(false)
@@ -87,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         permissionPanel = findViewById(R.id.permissionPanel)
         updateManager = GitHubUpdateManager(applicationContext)
         previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
+        restoreDetectionDisplayMode()
 
         findViewById<Button>(R.id.permissionButton).apply {
             backgroundTintList = null
@@ -180,6 +183,7 @@ class MainActivity : AppCompatActivity() {
             val result = currentDetector.detect(uprightBitmap)
             runOnUiThread {
                 overlay.setResult(result)
+                updateDetectionStatusVisibility(result.detections.isNotEmpty())
                 setStatus(
                     "YOLO11s  •  ${result.inferenceMs} ms  •  ${result.detections.size}",
                     R.color.success
@@ -190,6 +194,7 @@ class MainActivity : AppCompatActivity() {
             if (!inferenceErrorShown) {
                 inferenceErrorShown = true
                 runOnUiThread {
+                    showStatusPanelImmediately()
                     setStatus("Błąd analizy obrazu", R.color.error)
                     resultText.text = error.message ?: "Nieznany b\u0142\u0105d modelu"
                 }
@@ -266,6 +271,36 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun updateDetectionStatusVisibility(hasDetections: Boolean) {
+        if (statusHiddenForDetections == hasDetections) return
+        statusHiddenForDetections = hasDetections
+        statusPanel.animate().cancel()
+
+        if (hasDetections) {
+            statusPanel.animate()
+                .alpha(0f)
+                .setDuration(160L)
+                .withEndAction {
+                    if (statusHiddenForDetections) statusPanel.visibility = View.GONE
+                }
+                .start()
+        } else {
+            statusPanel.alpha = 0f
+            statusPanel.visibility = View.VISIBLE
+            statusPanel.animate()
+                .alpha(1f)
+                .setDuration(180L)
+                .start()
+        }
+    }
+
+    private fun showStatusPanelImmediately() {
+        statusHiddenForDetections = false
+        statusPanel.animate().cancel()
+        statusPanel.alpha = 1f
+        statusPanel.visibility = View.VISIBLE
+    }
+
     private fun showUpdateMenu() {
         if (updateDialog?.isShowing == true) return
 
@@ -280,6 +315,7 @@ class MainActivity : AppCompatActivity() {
         val githubButton = dialog.findViewById<Button>(R.id.openGithubButton)
 
         updateStatusText = status
+        configureDisplayModeButtons(dialog)
         dialog.findViewById<TextView>(R.id.currentVersionText).text =
             getString(R.string.current_version, BuildConfig.VERSION_NAME)
 
@@ -322,6 +358,45 @@ class MainActivity : AppCompatActivity() {
             WindowManager.LayoutParams.WRAP_CONTENT
         )
         updateDialog = dialog
+    }
+
+    private fun restoreDetectionDisplayMode() {
+        val savedMode = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE)
+            .getString(PREFERENCE_DISPLAY_MODE, DetectionDisplayMode.AUTOMATIC.name)
+        detectionDisplayMode = DetectionDisplayMode.values()
+            .firstOrNull { it.name == savedMode }
+            ?: DetectionDisplayMode.AUTOMATIC
+        overlay.setDisplayMode(detectionDisplayMode)
+    }
+
+    private fun configureDisplayModeButtons(dialog: Dialog) {
+        val buttons = mapOf(
+            DetectionDisplayMode.MINIMAL to
+                dialog.findViewById<TextView>(R.id.minimalModeButton),
+            DetectionDisplayMode.AUTOMATIC to
+                dialog.findViewById<TextView>(R.id.automaticModeButton),
+            DetectionDisplayMode.FULL to
+                dialog.findViewById<TextView>(R.id.fullModeButton)
+        )
+
+        fun refreshSelection() {
+            buttons.forEach { (mode, button) ->
+                button.isActivated = mode == detectionDisplayMode
+            }
+        }
+
+        buttons.forEach { (mode, button) ->
+            button.setOnClickListener {
+                detectionDisplayMode = mode
+                overlay.setDisplayMode(mode)
+                getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE)
+                    .edit()
+                    .putString(PREFERENCE_DISPLAY_MODE, mode.name)
+                    .apply()
+                refreshSelection()
+            }
+        }
+        refreshSelection()
     }
 
     private fun checkForUpdate(
@@ -457,6 +532,11 @@ class MainActivity : AppCompatActivity() {
         detector = null
         analysisExecutor.shutdownNow()
         super.onDestroy()
+    }
+
+    private companion object {
+        const val PREFERENCES_NAME = "kamera_ai_preferences"
+        const val PREFERENCE_DISPLAY_MODE = "detection_display_mode"
     }
 }
 
